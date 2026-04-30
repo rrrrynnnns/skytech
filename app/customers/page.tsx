@@ -4,7 +4,6 @@ import { Layout } from '@/app/components/Layout';
 import { AddCustomerDialog } from '@/app/components/AddCustomerDialog';
 import { AddDebtDialog } from '@/app/components/AddDebtDialog';
 import { RecordPaymentDialog } from '@/app/components/RecordPaymentDialog';
-import { SendReminderDialog } from '@/app/components/SendReminderDialog';
 import { useStore } from '@/app/contexts/StoreContext';
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -17,7 +16,6 @@ export default function CustomersPage() {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [showAddDebt, setShowAddDebt] = useState(false);
   const [showRecordPayment, setShowRecordPayment] = useState(false);
-  const [showSendReminder, setShowSendReminder] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
@@ -64,9 +62,9 @@ export default function CustomersPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900">Customers</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Customers</h1>
             <div className="mt-2 flex items-center gap-3 text-sm text-slate-500">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[13px] font-semibold text-blue-600">
                 {customers.length}
@@ -75,13 +73,13 @@ export default function CustomersPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3 md:gap-3">
             <button
               onClick={() => {
                 setSelectedCustomerId(undefined);
                 setShowAddDebt(true);
               }}
-              className="inline-flex items-center gap-2 rounded-full bg-[#f31260] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#e11d48]"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f31260] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#e11d48] min-h-[44px]"
             >
               <ArrowUpRight className="h-4 w-4" />
               <span>Add Debt</span>
@@ -91,21 +89,14 @@ export default function CustomersPage() {
                 setSelectedCustomerId(undefined);
                 setShowRecordPayment(true);
               }}
-              className="inline-flex items-center gap-2 rounded-full bg-[#16a34a] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#15803d]"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#16a34a] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#15803d] min-h-[44px]"
             >
               <Plus className="h-4 w-4" />
               <span>Record Payment</span>
             </button>
             <button
-              onClick={() => setShowSendReminder(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#f97316] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#ea580c]"
-            >
-              <Mail className="h-4 w-4" />
-              <span>Send Reminder</span>
-            </button>
-            <button
               onClick={() => setShowAddCustomer(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#2563eb] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#1d4ed8]"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2563eb] px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#1d4ed8] min-h-[44px]"
             >
               <UserPlus className="h-4 w-4" />
               <span>Add Customer</span>
@@ -114,8 +105,8 @@ export default function CustomersPage() {
         </div>
 
         {/* Search and Filter */}
-        <div className="rounded-3xl bg-white p-5 shadow-md">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="rounded-3xl bg-white p-4 md:p-5 shadow-md">
+          <div className="flex flex-col gap-4">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400">
@@ -124,14 +115,14 @@ export default function CustomersPage() {
               </span>
               <input
                 type="text"
-                placeholder="Search by name, phone, email, or address..."
+                placeholder="Search by name, phone, email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50/60 pl-14 pr-4 py-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70"
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {[
                 { value: 'all' as FilterType, label: 'All' },
                 { value: 'with-debt' as FilterType, label: 'With Debt' },
@@ -140,7 +131,7 @@ export default function CustomersPage() {
                 <button
                   key={btn.value}
                   onClick={() => setFilter(btn.value)}
-                  className={`min-w-20 rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                  className={`flex-1 min-w-[70px] rounded-2xl px-3 md:px-4 py-2 text-xs md:text-sm font-semibold transition min-h-[40px] ${
                     filter === btn.value
                       ? btn.value === 'with-debt'
                         ? 'bg-[#f31260] text-white shadow-[0_10px_24px_rgba(243,18,96,0.4)]'
@@ -269,10 +260,6 @@ export default function CustomersPage() {
         isOpen={showRecordPayment}
         onClose={() => setShowRecordPayment(false)}
         customerId={selectedCustomerId}
-      />
-      <SendReminderDialog
-        isOpen={showSendReminder}
-        onClose={() => setShowSendReminder(false)}
       />
     </Layout>
   );

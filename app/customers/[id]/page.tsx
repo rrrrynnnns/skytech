@@ -80,8 +80,8 @@ export default function CustomerDetailPage() {
     );
   }
 
-  const handleArchive = () => {
-    archiveCustomer(customerId);
+  const handleArchive = async () => {
+    await archiveCustomer(customerId);
     router.push('/archive');
   };
 
@@ -96,14 +96,14 @@ export default function CustomerDetailPage() {
     setShowEditDialog(true);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editForm.name.trim() || !editForm.phone.trim() || !editForm.address.trim()) {
       setEditError('Name, phone, and address are required.');
       return;
     }
 
-    updateCustomer(customerId, {
+    await updateCustomer(customerId, {
       name: editForm.name.trim(),
       phone: editForm.phone.trim(),
       email: editForm.email.trim() || undefined,
@@ -199,7 +199,7 @@ export default function CustomerDetailPage() {
               <p className="text-base font-semibold text-slate-800">Email</p>
             </div>
             <p className="text-lg font-semibold text-slate-900">
-              {customer.email || 'maria.santos@example.com'}
+              {customer.email || 'No email set'}
             </p>
           </div>
 

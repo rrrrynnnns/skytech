@@ -12,7 +12,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -21,10 +21,10 @@ export default function LoginPage() {
       return;
     }
 
-    const isSuccess = login(username, password);
-    if (isSuccess) {
+    try {
+      await login(username, password);
       router.push('/dashboard');
-    } else {
+    } catch {
       setError('Invalid username or password');
       setPassword('');
     }
@@ -66,7 +66,7 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-10 py-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-10 py-3 text-base text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70 min-h-11"
                 placeholder="Enter your username"
               />
             </div>
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-10 py-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-10 py-3 text-base text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70 min-h-11"
                 placeholder="Enter your password"
               />
             </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="mt-4 w-full rounded-xl bg-[#2563ff] py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(37,99,235,0.65)] transition hover:bg-[#1d4fd8]"
+            className="mt-4 flex w-full min-h-11 items-center justify-center rounded-xl bg-[#2563ff] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(37,99,235,0.65)] transition hover:bg-[#1d4fd8]"
           >
             Sign In
           </button>

@@ -52,15 +52,15 @@ export default function ArchivePage() {
 		setSelectedCustomerName('');
 	};
 
-	const handleConfirmAction = () => {
+	const handleConfirmAction = async () => {
 		if (!confirmAction || !selectedCustomerId) {
 			return;
 		}
 
 		if (confirmAction === 'restore') {
-			restoreCustomer(selectedCustomerId);
+			await restoreCustomer(selectedCustomerId);
 		} else {
-			deleteCustomer(selectedCustomerId);
+			await deleteCustomer(selectedCustomerId);
 		}
 
 		closeConfirmDialog();

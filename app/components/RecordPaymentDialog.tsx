@@ -27,7 +27,7 @@ export function RecordPaymentDialog({ isOpen, onClose, customerId }: RecordPayme
     setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.customerId) {
@@ -46,7 +46,7 @@ export function RecordPaymentDialog({ isOpen, onClose, customerId }: RecordPayme
       return;
     }
 
-    addTransaction({
+    await addTransaction({
       customerId: formData.customerId,
       type: 'payment',
       amount: paymentAmount,

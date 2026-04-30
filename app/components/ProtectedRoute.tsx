@@ -1,20 +1,21 @@
 'use client';
 
+
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authState } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    if (!user) {
       router.push('/login');
     }
-  }, [authState.isAuthenticated, router]);
+  }, [user, router]);
 
-  if (!authState.isAuthenticated) {
+  if (!user) {
     return null;
   }
 

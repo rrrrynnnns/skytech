@@ -25,7 +25,7 @@ export function AddDebtDialog({ isOpen, onClose, customerId }: AddDebtDialogProp
     setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.customerId) {
@@ -46,7 +46,7 @@ export function AddDebtDialog({ isOpen, onClose, customerId }: AddDebtDialogProp
       return;
     }
 
-    addTransaction({
+    await addTransaction({
       customerId: formData.customerId,
       type: 'debt',
       amount: parseFloat(formData.amount),

@@ -7,15 +7,15 @@ import { RecordPaymentDialog } from '@/app/components/RecordPaymentDialog';
 import { useStore } from '@/app/contexts/StoreContext';
 import { useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Archive, Clock, DollarSign, Users } from 'lucide-react';
+import { AlertCircle, Clock, DollarSign, TrendingUp, Users } from 'lucide-react';
 
 export default function DashboardPage() {
   const {
     customers,
-    archivedCustomers,
     transactions,
     getTotalDebt,
     getCustomersWithDebt,
+    getThisWeekNetChange,
   } = useStore();
 
   const [showAddDebt, setShowAddDebt] = useState(false);
@@ -23,39 +23,7 @@ export default function DashboardPage() {
 
   const totalDebt = getTotalDebt();
   const customersWithDebt = getCustomersWithDebt();
-  const totalArchivedCustomers = archivedCustomers.length;
-  const now = new Date();
-  const reminderWindow = new Date();
-  reminderWindow.setDate(reminderWindow.getDate() + 3);
-
-  const customersNeedingReminder = customers
-    .filter((customer) => customer.totalDebt > 0)
-    .map((customer) => {
-      const dueDates = transactions
-        .filter(
-          (transaction) =>
-            transaction.customerId === customer.id &&
-            transaction.type === 'debt' &&
-            !!transaction.dueDate,
-        )
-        .map((transaction) => new Date(transaction.dueDate as string))
-        .filter((date) => !Number.isNaN(date.getTime()))
-        .sort((a, b) => a.getTime() - b.getTime());
-
-      if (dueDates.length === 0) {
-        return null;
-      }
-
-      return {
-        customer,
-        nearestDueDate: dueDates[0],
-      };
-    })
-    .filter(
-      (item): item is { customer: (typeof customers)[number]; nearestDueDate: Date } =>
-        !!item && item.nearestDueDate.getTime() <= reminderWindow.getTime(),
-    )
-    .sort((a, b) => a.nearestDueDate.getTime() - b.nearestDueDate.getTime());
+  const thisWeekChange = getThisWeekNetChange();
 
   const recentTransactions = transactions
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -96,10 +64,10 @@ export default function DashboardPage() {
             color="blue"
           />
           <StatCard
-            title="Total Archive Customers"
-            value={totalArchivedCustomers}
-            icon={<Archive className="h-7 w-7" />}
-            color="gray"
+            title="This Week Activity"
+            value={`₱${thisWeekChange.toFixed(2)}`}
+            icon={<TrendingUp className="h-7 w-7" />}
+            color="green"
           />
         </div>
 
@@ -110,18 +78,23 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between bg-linear-to-r from-[#ff2750] via-[#ff2f8c] to-[#ff5b1f] px-8 py-6 text-white">
               <div>
                 <h2 className="text-2xl font-bold">Reminders</h2>
-                <p className="text-sm text-pink-100">Customers with due debt reminders</p>
+                <p className="text-sm text-pink-100">Customers with outstanding debt</p>
               </div>
+              {customersWithDebt.length > 0 && (
+                <div className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-sm font-semibold">
+                  {Math.min(customersWithDebt.length, 9)}
+                </div>
+              )}
             </div>
 
             <div className="bg-white px-8 py-4">
-              {customersNeedingReminder.length === 0 ? (
+              {customersWithDebt.length === 0 ? (
                 <p className="py-8 text-center text-sm text-gray-500">
-                  No customers with due debt reminders 🎉
+                  No customers with outstanding debt 🎉
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {customersNeedingReminder.slice(0, 5).map(({ customer, nearestDueDate }) => (
+                  {customersWithDebt.slice(0, 5).map((customer) => (
                     <div
                       key={customer.id}
                       className="flex items-center justify-between border-b border-gray-100 py-4 last:border-b-0"
@@ -137,18 +110,11 @@ export default function DashboardPage() {
                           >
                             {customer.name}
                           </Link>
+                          <p className="text-xs text-gray-500">{customer.phone}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
-                          <Clock className="h-3.5 w-3.5" />
-                          Due:{' '}
-                          {nearestDueDate.toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: '2-digit',
-                            year: 'numeric',
-                          })}
-                        </p>
+                        <p className="text-sm font-semibold text-gray-400">Outstanding</p>
                         <p className="text-[15px] font-bold text-[#ef4444]">
                           ₱{customer.totalDebt.toFixed(2)}
                         </p>
@@ -158,9 +124,9 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {customersNeedingReminder.length > 5 && (
+              {customersWithDebt.length > 5 && (
                 <div className="mt-3 text-right text-xs font-semibold text-blue-600">
-                  <Link href="/customers">View all due reminders →</Link>
+                  <Link href="/customers">View all customers with debt →</Link>
                 </div>
               )}
             </div>
