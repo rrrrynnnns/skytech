@@ -1,0 +1,4 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/app/lib/prisma';
+import { requireRole } from '@/app/lib/api';
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) { const access = await requireRole(['admin', 'subscriber']); if (access.response) return access.response; const body = await request.json(); const { id } = await context.params; const existing = await prisma.bill.findUnique({ where: { id } }); if (!existing || (access.session?.user?.role === 'subscriber' && existing.subscriberId !== access.session.user.subscriberId)) return NextResponse.json({ data: null, error: 'Bill not found.' }, { status: 404 }); const bill = await prisma.bill.update({ where: { id }, data: { status: 'Paid', paymentMethod: body.paymentMethod, referenceNumber: body.referenceNumber } }); return NextResponse.json({ data: bill, error: null }); }

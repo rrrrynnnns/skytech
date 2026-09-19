@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  admin
+  technician
+  subscriber
+}
+enum Plan {
+  Fiber_25Mbps
+  Fiber_50Mbps
+  Fiber_100Mbps
+  Fiber_200Mbps
+  Fiber_300Mbps
+}
+enum SubscriberStatus {
+  Active
+  Suspended
+  Disconnected
+}
+enum TechnicianStatus {
+  Active
+  Off_Duty
+  On_Leave
+}
+enum BillStatus {
+  Paid
+  Unpaid
+  Overdue
+}
+enum InstallationType {
+  Installation
+  Repair
+  Maintenance
+}
+enum InstallationStatus {
+  Scheduled
+  In_Progress
+  Completed
+  Cancelled
+}
+enum BookingStatus {
+  Pending
+  Reviewed
+  Approved
+  Rejected
+}
+enum TicketType {
+  Billing_Inquiry
+  No_Internet_Connection
+  Slow_Internet_Connection
+}
+enum TicketStatus {
+  Open
+  In_Progress
+  Resolved
+  Closed
+}
+enum TicketPriority {
+  Low
+  Medium
+  High
+  Urgent
+}
+enum NotifType {
+  booking
+  billing
+  installation
+  system
+  task
+  assignment
+  update
+}
+
+model User {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  password     String
+  role         Role
+  subscriberId String?
+  technicianId String?
+}
+
+model Subscriber {
+  id             String @id
+  name           String
+  email          String
+  contact        String
+  address        String
+  province       String?
+  city           String?
+  barangay       String?
+  street         String?
+  zipCode        String?
+  plan           Plan
+  status         SubscriberStatus
+  connectionDate DateTime
+  bills          Bill[]
+  tickets        Ticket[]
+  bookings       Booking[]
+}
+
+model Technician {
+  id             String @id
+  name           String
+  email          String
+  specialization String
+  status         TechnicianStatus
+  installations  Installation[]
+}
+
+model Bill {
+  id              String @id
+  subscriberId    String
+  subscriber      Subscriber @relation(fields: [subscriberId], references: [id])
+  plan            Plan
+  billingPeriod   String
+  amount          Float
+  dueDate         DateTime
+  status          BillStatus
+  paymentMethod   String?
+  referenceNumber String?
+}
+
+model Installation {
+  id           String @id
+  subscriberId String
+  technicianId String
+  technician   Technician @relation(fields: [technicianId], references: [id])
+  address      String
+  date         DateTime
+  time         String
+  type         InstallationType
+  status       InstallationStatus
+  notes        String?
+}
+
+model Booking {
+  id            String @id
+  name          String
+  contact       String
+  email         String
+  address       String
+  plan          Plan
+  preferredDate DateTime
+  submittedAt   DateTime @default(now())
+  status        BookingStatus
+  notes         String?
+  subscriberId  String?
+  subscriber    Subscriber? @relation(fields: [subscriberId], references: [id])
+}
+
+model Ticket {
+  id           String @id
+  subscriberId String
+  subscriber   Subscriber @relation(fields: [subscriberId], references: [id])
+  type         TicketType
+  subject      String
+  description  String
+  status       TicketStatus
+  priority     TicketPriority
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  adminNote    String?
+}
+
+model Notification {
+  id        String @id @default(cuid())
+  forRole   Role
+  forUserId String?
+  type      NotifType
+  title     String
+  body      String
+  timestamp DateTime @default(now())
+  read      Boolean @default(false)
+}
+
+model Message {
+  id        String @id @default(cuid())
+  fromId    String
+  fromName  String
+  fromRole  String
+  toId      String
+  content   String
+  timestamp DateTime @default(now())
+  isBot     Boolean @default(false)
+}
+
+model SystemSettings {
+  id              String @id @default("singleton")
+  companyName     String
+  companyEmail    String
+  phone           String
+  address         String
+  lateFeePercent  Float
+  gracePeriodDays Int
+  billingDay      Int
+  plans           Json
+}

@@ -1,0 +1,3 @@
+'use client';
+import React from 'react';
+export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> { state = { hasError: false }; static getDerivedStateFromError() { return { hasError: true }; } render() { return this.state.hasError ? <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">Something went wrong. Please refresh and try again.</div> : this.props.children; } }

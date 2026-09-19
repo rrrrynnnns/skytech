@@ -1,109 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Lock, Store, Check } from 'lucide-react';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { LockKeyhole, Zap } from 'lucide-react';
+import { Spinner } from '@/app/components/Spinner';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function loginAs(email: string, password: string) {
     setError('');
-
-    if (!username || !password) {
-      setError('Please enter both username and password');
+    setIsSigningIn(true);
+    const result = await signIn('credentials', { email, password, redirect: false });
+    if (result?.error) {
+      setError('Demo accounts are not seeded yet. Run npm run db:push and npm run db:seed.');
+      setIsSigningIn(false);
       return;
     }
+    const role = email.startsWith('admin') ? 'admin' : email.startsWith('tech') ? 'technician' : 'subscriber';
+    router.push(role === 'admin' ? '/dashboard' : role === 'technician' ? '/my-tasks' : '/my-account');
+  }
 
-    try {
-      await login(username, password);
-      router.push('/dashboard');
-    } catch {
-      setError('Invalid username or password');
-      setPassword('');
-    }
-  };
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    await loginAs(String(values.email), String(values.password));
+  }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-[#021233] via-[#06276a] to-[#0b2f75] px-4 py-8">
-      <div className="w-full max-w-md rounded-4xl bg-white px-10 py-8 shadow-[0_32px_80px_rgba(15,23,42,0.55)]">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="relative mb-6">
-            <div className="grid h-20 w-20 place-items-center rounded-3xl bg-linear-to-br from-[#2f67ff] to-[#1f4fe0] text-white shadow-[0_18px_40px_rgba(37,99,235,0.65)]">
-              <Store className="h-11 w-11" strokeWidth={2.2} />
-            </div>
-            <div className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full bg-[#16a34a] text-white shadow-[0_0_0_3px_white]">
-              <Check className="h-4 w-4" strokeWidth={3} />
-            </div>
-          </div>
-
-          <h1 className="text-center text-3xl font-semibold tracking-tight text-slate-900">
-            Sari-Sari Store
-          </h1>
-          <p className="mt-1 text-center text-sm font-medium text-slate-500">
-            Utang Reminder
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Username
-            </label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
-                <User className="h-4 w-4 text-slate-400" />
-              </span>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-10 py-3 text-base text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70 min-h-11"
-                placeholder="Enter your username"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Password
-            </label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
-                <Lock className="h-4 w-4 text-slate-400" />
-              </span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-10 py-3 text-base text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/70 min-h-11"
-                placeholder="Enter your password"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-xs font-medium text-red-600">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="mt-4 flex w-full min-h-11 items-center justify-center rounded-xl bg-[#2563ff] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(37,99,235,0.65)] transition hover:bg-[#1d4fd8]"
-          >
-            Sign In
-          </button>
-        </form>
-      </div>
+  return <main className="grid min-h-screen bg-[#f8fafc] lg:grid-cols-2">
+    <div className="hidden bg-[#0f172a] p-12 text-white lg:flex lg:flex-col lg:justify-between">
+      <Link href="/" className="flex items-center gap-3 font-bold"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#3b4fd8]"><Zap size={18} fill="currentColor" /></span>Sky-Tech ISP</Link>
+      <div><p className="max-w-md text-5xl font-bold leading-tight">Your connection, under your control.</p><p className="mt-5 max-w-md leading-7 text-slate-400">Track service, bills, support, and installations from one calm workspace.</p></div>
+      <p className="text-sm text-slate-500">Reliable by design.</p>
     </div>
-  );
+    <div className="flex items-center justify-center p-6"><div className="w-full max-w-md">
+      <h1 className="text-3xl font-bold tracking-tight">Welcome back.</h1><p className="mt-2 text-slate-500">Sign in to your Sky-Tech workspace.</p>
+      <div className="mt-8 grid grid-cols-3 gap-2">
+        {[['admin@skytech.net', 'admin123', 'Admin demo'], ['tech@skytech.net', 'tech123', 'Technician demo'], ['user1@skytech.net', 'user123', 'Subscriber demo']].map(([email, password, label]) => <button key={email} type="button" disabled={isSigningIn} onClick={() => loginAs(email, password)} className="rounded-xl bg-blue-50 px-2 py-3 text-xs font-bold text-[#3b4fd8]">{label}</button>)}
+      </div>
+      <div className="my-7 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200" />or sign in manually<span className="h-px flex-1 bg-slate-200" /></div>
+      <form onSubmit={submit} className="space-y-5">
+        <label className="block text-sm font-semibold">Email<input name="email" type="email" required placeholder="you@skytech.net" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-normal outline-none" /></label>
+        <label className="block text-sm font-semibold">Password<input name="password" type="password" required placeholder="Password" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-normal outline-none" /></label>
+        {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+        <button disabled={isSigningIn} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#3b4fd8] px-5 py-3.5 font-bold text-white"><LockKeyhole size={17} />{isSigningIn ? <><Spinner />Signing in...</> : 'Sign in'}</button>
+      </form>
+      <p className="mt-6 text-center text-xs text-slate-400">Demo accounts: admin123, tech123, user123</p>
+    </div></div>
+  </main>;
 }

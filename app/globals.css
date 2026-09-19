@@ -1,26 +1,574 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  overscroll-behavior-y: none;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
+}
+
+button {
+  transition: all 150ms ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+[class*="tracking-[0.18em]"] {
+  display: none;
+}
+
+[class*="tracking-[0.18em]"] + h1 {
+  margin-top: 0;
+}
+
+main h1.mt-2 {
+  margin-top: 0;
+}
+
+main form section:nth-of-type(3) > div:last-child > div {
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  background: #f8fafc;
+  padding: 0.75rem;
+}
+
+main form section:nth-of-type(3) > div:last-child input {
+  background: #ffffff;
+  font-weight: 600;
+}
+
+main form section:nth-of-type(3) > div:last-child input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+main form section:nth-of-type(3) > div:last-child input[type="number"] {
+  text-align: right;
+}
+
+main form section:nth-of-type(3) > div:last-child button[aria-label="Remove plan"] {
+  border: 1px solid #fecaca;
+  background: #ffffff;
+}
+
+main form section:nth-of-type(3) > div:last-child button[aria-label="Remove plan"]:hover {
+  background: #fef2f2;
+}
+
+main > div.max-w-4xl:has(form) form > section:nth-of-type(3) > div:last-child > div {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+main > div.max-w-4xl:has(form) form > section:nth-of-type(3) > div:last-child {
+  background: #ffffff !important;
+}
+
+main > div.max-w-4xl:has(form) form > section:nth-of-type(3) > div:last-child > div {
+  background: #ffffff !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+main > div.max-w-4xl:has(form) form > section:nth-of-type(3) > div:last-child > div > div {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+main > div.max-w-4xl:has(form) form > section:nth-of-type(3) button[aria-label="Remove plan"] {
+  display: none !important;
+}
+
+button[aria-label="Remove plan"] {
+  display: none !important;
+}
+
+main form > section:last-of-type td:last-child svg {
+  display: none;
+}
+
+main form > section:last-of-type,
+main form > section:last-of-type * {
+  background-color: #ffffff !important;
+}
+
+main form > section:last-of-type input {
+  text-align: left;
+}
+
+main form > section:last-of-type input[type="number"] {
+  text-align: right;
+}
+
+main form > section:last-of-type > div:last-child {
+  padding: 1.5rem;
+}
+
+main form > section:last-of-type > div:last-child > div:first-child {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0;
+}
+
+main form > section:last-of-type > div:last-child > div:first-child + div {
+  display: grid;
+  gap: 0.75rem;
+}
+
+main form > section:last-of-type > div:last-child > div:first-child + div > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: center;
+}
+
+main form > section:last-of-type > div:last-child > div:first-child + div > div > input {
+  grid-column: span 1;
+}
+
+.internet-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.internet-plan-grid:first-child > span:last-child {
+  display: none;
+}
+
+.internet-plan-grid:not(:first-child) {
+  position: relative;
+}
+
+.internet-plan-grid:not(:first-child) > div:last-child {
+  position: absolute;
+  right: 0.5rem;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  gap: 0.25rem;
+  background: #ffffff;
+  padding-left: 0.5rem;
+}
+
+.internet-plan-grid:not(:first-child):hover > div:last-child,
+.internet-plan-grid:not(:first-child):focus-within > div:last-child {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.internet-plan-grid:not(:first-child) > button:last-child {
+  position: absolute;
+  right: 0.5rem;
+}
+
+.internet-plan-grid > .plan-actions {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  pointer-events: none;
+  background: #ffffff;
+  padding-left: 0.5rem;
+}
+
+.internet-plan-grid:hover > .plan-actions,
+.internet-plan-grid:focus-within > .plan-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.internet-plan-grid > .plan-actions button {
+  height: 2.25rem;
+  width: 2.25rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #94a3b8;
+}
+
+.internet-plan-grid > .plan-actions button:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.internet-plan-grid .plan-value {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+@media (max-width: 639px) {
+  .internet-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .internet-plan-grid:first-child {
+    display: none;
+  }
+
+  .internet-plan-grid > .plan-actions {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  main > div.max-w-4xl:has(form) {
+    max-width: 72rem;
+  }
+
+  main > div.max-w-4xl:has(form) form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  main > div.max-w-4xl:has(form) form > section:nth-of-type(3),
+  main > div.max-w-4xl:has(form) form > p,
+  main > div.max-w-4xl:has(form) form > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  main > div.max-w-4xl:has(form) form > section:nth-of-type(3) > div:last-child > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  main > div.max-w-4xl:has(form) form > section:nth-of-type(3) > div:last-child > div > input {
+    grid-column: span 1;
+  }
+}
+
+button[class*="bg-[#3b4fd8]"]:hover {
+  background-color: #2d3fc7;
+}
+
+input,
+select,
+textarea {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #3b4fd8;
+  box-shadow: 0 0 0 3px rgba(59, 79, 216, 0.1);
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: #fca5a5;
+  box-shadow: none;
+}
+
+label.mt-6 select option:nth-child(3) {
+  display: none;
+}
+
+button[class*="rounded-full"],
+a[class*="rounded-full"] {
+  transition: all 150ms ease;
+}
+
+tbody tr {
+  transition: none;
+}
+
+table tbody tr:hover,
+table tbody tr:hover > td {
+  background-color: #f8fafc !important;
+}
+
+.admin-filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  min-width: 0;
+  align-items: center;
+}
+
+.admin-filter-tabs button {
+  flex-shrink: 0;
+  height: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  background: white;
+  padding: 0 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:first-child > div:nth-child(2) button,
+main:has(table[class*="1100px"]) .mt-7.flex button,
+main:has(table[class*="1250px"]) .mt-7.flex button {
+  height: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.admin-filter-tabs button:hover {
+  background: #f8fafc;
+}
+
+.admin-filter-tabs button.active {
+  border-color: #2447b6;
+  background: #2447b6;
+  color: white;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:first-child,
+main:has(table[class*="900px"]) .mt-7.flex,
+main:has(table[class*="1100px"]) .mt-7.flex,
+main:has(table[class*="1200px"]) .mt-7.flex {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden input,
+main:has(table[class*="900px"]) .mt-7.flex input,
+main:has(table[class*="1100px"]) .mt-7.flex input,
+main:has(table[class*="1200px"]) .mt-7.flex input {
+  border-radius: 0.5rem;
+  background: white;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:first-child > div:nth-child(2) {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:first-child > div:nth-child(2) button {
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  background: white;
+  padding: 0.5rem 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:first-child > div:nth-child(2) button.active {
+  border-color: #2447b6;
+  background: #2447b6;
+  color: white;
+}
+
+main:has(table[class*="1050px"]) .subscriber-filter-tab {
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  background: white;
+  padding: 0.5rem 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+main:has(table[class*="1050px"]) .subscriber-filter-tab.active {
+  border-color: #2447b6;
+  background: #2447b6;
+  color: white;
+}
+
+main:has(table[class*="900px"]) .mt-7.flex select,
+main:has(table[class*="1200px"]) .mt-7.flex select {
+  display: none;
+}
+
+main:has(table[class*="900px"]) .mt-7.flex .admin-filter-tabs,
+main:has(table[class*="1200px"]) .mt-7.flex .admin-filter-tabs {
+  flex: 1 1 auto;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden {
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:first-child {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden > div:last-child {
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: white;
+}
+
+div.mt-7.overflow-hidden:has(table[class*="1050px"]) {
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+div.mt-7.overflow-hidden:has(table[class*="1050px"]) > div:first-child {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+div.mt-7.overflow-hidden:has(table[class*="1050px"]) > div:last-child {
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: white;
+}
+
+.live-record-counter {
+  margin-left: auto;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(7),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(7) {
+  display: none;
+}
+
+main:has(table[class*="1250"]) .overflow-x-auto table {
+  width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+main:has(table[class*="1250"]) .overflow-x-auto table th,
+main:has(table[class*="1250"]) .overflow-x-auto table td {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  white-space: nowrap;
+}
+
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(1),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(1) { width: 9%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(2),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(2) { width: 14%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(3),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(3) { width: 14%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(4),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(4) { width: 19%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(5),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(5) { width: 10%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(6),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(6) { width: 8%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(8),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(8) { width: 13%; }
+main:has(table[class*="1250"]) .overflow-x-auto table th:nth-of-type(9),
+main:has(table[class*="1250"]) .overflow-x-auto table td:nth-of-type(9) { width: 13%; }
+
+main:has(table[class*="900px"]) > div > div.mt-7.grid.gap-3,
+main:has(table[class*="1100px"]) > div > div.mt-7.grid.gap-3,
+main:has(table[class*="1200px"]) > div > div.mt-7.grid.gap-3 {
+  display: none;
+}
+
+aside nav a {
+  border-left: 2px solid transparent;
+  transition: all 150ms ease;
+}
+
+aside nav a[class*="bg-blue-50"] {
+  border-left-color: #2563eb;
+}
+
+.overflow-auto,
+.overflow-x-auto,
+.overflow-y-auto {
+  scrollbar-width: none;
+}
+
+.overflow-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-overlay {
+  animation: modal-fade-in 200ms ease-out;
+}
+
+.modal-panel {
+  animation: modal-slide-up 200ms ease-out;
+}
+
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
