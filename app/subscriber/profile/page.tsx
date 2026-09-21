@@ -5,6 +5,7 @@ import { ChevronRight, CircleHelp, CreditCard, FileText, UserRound } from 'lucid
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { signOut } from 'next-auth/react';
 import { PortalShell } from '@/app/components/PortalShell';
+import { formatPersonName } from '@/app/lib/name';
 
 type Account = { id: string; name: string; email: string; contact: string; address: string; province?: string | null; city?: string | null; barangay?: string | null; street?: string | null; zipCode?: string | null };
 type LocationOption = { code: string; name: string; regionCode?: string; provinceCode?: string | false };
@@ -48,7 +49,7 @@ export default function SubscriberProfilePage() {
   async function saveProfile(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!account) return; const name = [form.firstName, form.middleName, form.lastName].filter(Boolean).join(' '); const address = [form.addressLine1, form.addressLine2, form.street, form.barangay, form.city, form.province, form.zipCode].filter(Boolean).join(', '); const response = await fetch(`/api/subscribers/${account.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email: form.email, contact: form.contact, address, province: form.province, city: form.city, barangay: form.barangay, street: form.street, zipCode: form.zipCode }) }); const result = await response.json(); if (!response.ok || !result.data) { setError(result.error || 'Unable to save profile details.'); return; } setAccount(result.data); setForm(getForm(result.data)); setIsEditing(false); }
   async function handleSignOut() { await signOut({ callbackUrl: '/login' }); }
 
-  const displayName = account?.name || 'Loading...';
+  const displayName = formatPersonName(account?.name || 'Loading...');
   const initials = displayName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   const provinceOptions = Array.from(new Map([...provinces, ...(form.province ? [{ code: 'saved-province', name: form.province }] : [])].map((option) => [option.name, option])).values());
   const cityOptions = Array.from(new Map([...cities, ...(form.city ? [{ code: 'saved-city', name: form.city }] : [])].map((option) => [option.name, option])).values());

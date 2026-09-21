@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Bell, CircleHelp, CreditCard, FileText, MessageSquare, PhilippinePeso, Wifi, Zap } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
 import { Badge } from '@/app/components/Badge';
+import { formatPersonName } from '@/app/lib/name';
 
 const actions = [
   { label: 'Pay Bills', href: '/subscriber/pay-bills', Icon: CreditCard },
@@ -36,8 +37,8 @@ export default function SubscriberAccount() {
     }).catch(() => undefined);
   }, []);
 
-  const name = account?.name || 'Loading account...';
-  const firstName = account?.name.split(' ')[0] || 'Loading';
+  const name = formatPersonName(account?.name || 'Loading account...');
+  const firstName = name.split(' ')[0] || 'Loading';
   const price = account?.monthlyPrice ? `₱${account.monthlyPrice.toLocaleString()}` : '';
   const isPaid = billStatus === 'Paid';
 

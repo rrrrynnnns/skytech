@@ -112,6 +112,7 @@ model Technician {
   id             String @id
   name           String
   email          String
+  contact        String?
   specialization String
   status         TechnicianStatus
   installations  Installation[]

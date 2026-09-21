@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, Plus, Search, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
+import { formatPersonName } from '@/app/lib/name';
 
 type Subscriber = readonly [string, string, string, string, string, string, string, string, string, string, string, string, string];
 
@@ -55,7 +56,7 @@ export function AdminSubscribersPage() {
     select.value = plans.includes(selectedPlan) ? selectedPlan : plans[0];
   }, [isAdding, plans, editingSubscriber]);
 
-  const rows = subscribers.filter((subscriber) => (filter === 'All' || subscriber[4] === filter) && subscriber.join(' ').toLowerCase().includes(query.toLowerCase()));
+  const rows = subscribers.filter((subscriber) => (filter === 'All' || subscriber[4] === filter) && subscriber.join(' ').toLowerCase().includes(query.toLowerCase())).map((subscriber) => subscriber.map((value, index) => index === 1 ? formatPersonName(value) : value) as unknown as Subscriber);
 
   useEffect(() => {
     const table = document.querySelector('table[class*="min-w-[1050px]"]');
@@ -158,8 +159,12 @@ export function AdminSubscribersPage() {
       if (!subscriber) return;
       if (button.textContent?.trim() === 'Delete') {
         if (window.confirm('Delete this subscriber?')) {
-          fetch(`/api/subscribers/${id}`, { method: 'DELETE' }).then((response) => {
+          fetch(`/api/subscribers/${id}`, { method: 'DELETE' }).then(async (response) => {
             if (response.ok) setSubscribers((current) => current.filter((item) => item[0] !== id));
+            else {
+              const result = await response.json().catch(() => null);
+              window.alert(result?.error || 'Unable to delete subscriber.');
+            }
           }).catch(() => undefined);
         }
       }
@@ -175,6 +180,8 @@ export function AdminSubscribersPage() {
 
   useEffect(() => {
     const table = document.querySelector('table[class*="min-w-[1050px]"]');
+    const idHeader = table?.querySelector<HTMLTableCellElement>('thead th:first-child');
+    if (idHeader) idHeader.textContent = 'SUBSCRIBER ID';
     const buttons = table?.closest('.mt-7')?.querySelectorAll<HTMLButtonElement>('.flex.gap-2 button');
     buttons?.forEach((button) => {
       const isActive = button.textContent?.trim() === filter;

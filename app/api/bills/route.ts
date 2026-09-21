@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 	const status = new URL(request.url).searchParams.get('status');
 	const isSubscriber = access.session?.user?.role === 'subscriber';
 	const subscriberId = isSubscriber ? access.session.user.subscriberId : new URL(request.url).searchParams.get('subscriberId');
-	const bills = await prisma.bill.findMany({ where: { ...(subscriberId ? { subscriberId } : {}), ...(status && status !== 'All' ? { status: status as 'Paid' | 'Unpaid' | 'Overdue' } : {}) }, orderBy: { dueDate: 'desc' } });
+	const bills = await prisma.bill.findMany({ where: { ...(subscriberId ? { subscriberId } : {}), ...(status && status !== 'All' ? { status: status as 'Paid' | 'Unpaid' | 'Overdue' } : {}) }, orderBy: { dueDate: 'desc' }, include: { subscriber: { select: { name: true } } } });
 	if (!isSubscriber || !subscriberId) return NextResponse.json({ data: bills, error: null });
 
 	const [subscriber, systemSettings] = await Promise.all([
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 				status: 'Unpaid',
 			},
 		});
-		currentBills = [createdBill];
+		currentBills = [{ ...createdBill, subscriber: { name: subscriber.name } }];
 	} else if (currentPrice !== undefined) {
 		currentBills = currentBills.map((bill) => ({ ...bill, amount: Number(currentPrice) }));
 	}

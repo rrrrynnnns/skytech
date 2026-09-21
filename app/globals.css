@@ -554,6 +554,83 @@ aside nav a[class*="bg-blue-50"] {
   animation: modal-slide-up 200ms ease-out;
 }
 
+.modal-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: #64748b transparent !important;
+}
+
+.modal-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+
+.modal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb {
+  border: 3px solid transparent !important;
+  border-radius: 9999px;
+  background-clip: padding-box;
+  background-color: #64748b !important;
+}
+
+.fixed.inset-0 form.overflow-y-auto {
+  scrollbar-width: thin !important;
+  scrollbar-color: #64748b transparent !important;
+}
+
+table[class*="min-w-[1050px]"] tbody td:first-child {
+  font-family: inherit;
+  font-weight: 400;
+  color: #0f172a !important;
+}
+
+td.font-mono,
+p.font-mono {
+  font-family: inherit !important;
+  font-weight: 400 !important;
+  color: #0f172a !important;
+}
+
+table tbody td:first-child {
+  color: #0f172a !important;
+  font-family: inherit !important;
+  font-weight: 400 !important;
+}
+
+table[class*="min-w-[1250px]"] thead th {
+  white-space: nowrap;
+}
+
+table[class*="min-w-[1250px]"] thead th:first-child {
+  width: 180px;
+  min-width: 180px;
+  padding-right: 32px !important;
+}
+
+table[class*="min-w-[1250px]"] thead th:nth-child(2) {
+  width: 190px;
+  min-width: 190px;
+  padding-left: 10px !important;
+}
+
+table thead th > span.text-\[10px\] {
+  display: none;
+}
+
+.fixed.inset-0 form.overflow-y-auto::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+
+.fixed.inset-0 form.overflow-y-auto::-webkit-scrollbar-thumb {
+  border: 3px solid transparent !important;
+  border-radius: 9999px;
+  background-clip: padding-box;
+  background-color: #64748b !important;
+}
+
 .scrollbar-hidden {
   scrollbar-width: none;
 }

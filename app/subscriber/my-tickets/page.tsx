@@ -30,7 +30,7 @@ export default function MyTicketsPage() {
     setIsSubmitting(true);
     const values = Object.fromEntries(new FormData(event.currentTarget));
     try {
-      const response = await fetch('/api/tickets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: `TKT-${Date.now()}`, type, subject: values.subject, description: values.description }) });
+      const response = await fetch('/api/tickets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type, subject: values.subject, description: values.description }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to submit request.');
       setTickets((items) => [result.data, ...items]);

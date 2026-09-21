@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CalendarDays, Clock3, Plus, Search, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
+import { formatPersonName } from '@/app/lib/name';
 
 type Installation = readonly [string, string, string, string, string, string, string, string];
 type Filter = 'All' | 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
@@ -23,14 +24,20 @@ export function AdminInstallationsPage() {
 
   useEffect(() => {
     fetch('/api/installations').then((response) => response.json()).then((result) => {
-      if (Array.isArray(result.data)) setInstallations(result.data.map((item: { id: string; subscriberId: string; technician?: { name: string }; address: string; date: string; time: string; type: string; status: string }) => [item.id, item.subscriberId, item.technician?.name || '', item.address, item.date.slice(0, 10), item.time, item.type, item.status.replace('_', ' ')]));
+      if (Array.isArray(result.data)) setInstallations(result.data.map((item: { id: string; subscriber?: { name: string; address: string; province?: string | null; city?: string | null; barangay?: string | null; street?: string | null; zipCode?: string | null }; technician?: { name: string }; address: string; date: string; time: string; type: string; status: string }) => [item.id, formatPersonName(item.subscriber?.name || ''), formatPersonName(item.technician?.name || ''), [item.subscriber?.street, item.subscriber?.barangay, item.subscriber?.city, item.subscriber?.province, item.subscriber?.zipCode].filter(Boolean).join(', ') || item.subscriber?.address || item.address, item.date.slice(0, 10), item.time, item.type, item.status.replace('_', ' ')]));
     }).catch(() => undefined);
   }, []);
 
-  const visibleInstallations = installations.filter((item) => (filter === 'All' || item[7] === filter) && item.join(' ').toLowerCase().includes(query.toLowerCase()));
+  const visibleInstallations = installations.filter((item) => (filter === 'All' || item[7] === filter) && item.join(' ').toLowerCase().includes(query.toLowerCase())).map((item) => item.map((value, index) => index === 1 || index === 2 ? formatPersonName(value) : value) as unknown as Installation);
 
   useEffect(() => {
     const table = document.querySelector('table[class*="min-w-[1250px]"]');
+    const firstHeader = table?.querySelector<HTMLTableCellElement>('thead th:first-child');
+    if (firstHeader) firstHeader.textContent = 'INSTALLATION ID';
+    const secondHeader = table?.querySelector<HTMLTableCellElement>('thead th:nth-child(2)');
+    if (firstHeader) { firstHeader.style.width = '180px'; firstHeader.style.paddingRight = '32px'; }
+    if (secondHeader) { secondHeader.textContent = 'SUBSCRIBER'; secondHeader.style.width = '190px'; secondHeader.style.paddingLeft = '10px'; }
+    table?.querySelectorAll('thead th span').forEach((arrow) => arrow.remove());
     const toolbar = table?.closest('.mt-4')?.previousElementSibling;
     if (!toolbar) return;
     toolbar.querySelectorAll('.installation-record-counter').forEach((node) => node.remove());
