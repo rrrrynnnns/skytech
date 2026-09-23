@@ -6,7 +6,7 @@ import { PortalShell } from '@/app/components/PortalShell';
 
 type Plan = { name: string; speedMbps: number; price: number };
 type Settings = { companyName: string; companyEmail: string; phone: string; address: string; lateFeePercent: number; gracePeriodDays: number; billingDay: number; plans: Plan[] };
-const blank: Settings = { companyName: '', companyEmail: '', phone: '', address: '', lateFeePercent: 0, gracePeriodDays: 0, billingDay: 1, plans: [] };
+const blank: Settings = { companyName: '', companyEmail: '', phone: '', address: '', lateFeePercent: 0, gracePeriodDays: 0, billingDay: 30, plans: [] };
 
 function normalizePlans(value: unknown): Plan[] { if (!Array.isArray(value)) return []; return value.map((plan: { name?: string; speedMbps?: number; speed?: string | number; price?: number }) => { const name = plan.name || ''; return { name, speedMbps: Number(plan.speedMbps || String(plan.speed ?? '').replace(/[^0-9.]/g, '') || name.match(/[0-9]+/)?.[0] || 0), price: Number(plan.price || 0) }; }); }
 

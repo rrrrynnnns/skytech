@@ -22,7 +22,7 @@ export default function LoginPage() {
       return;
     }
     const role = email.startsWith('admin') ? 'admin' : email.startsWith('tech') ? 'technician' : 'subscriber';
-    router.push(role === 'admin' ? '/dashboard' : role === 'technician' ? '/my-tasks' : '/my-account');
+    router.replace(role === 'admin' ? '/admin/dashboard' : role === 'technician' ? '/technician/my-tasks' : '/subscriber/my-account');
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {

@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
 import { formatPersonName } from '@/app/lib/name';
+import { formatTicketStatus } from '@/app/lib/ticket-status';
 
-type Ticket = readonly [string, string, string, string, string, string, string, string, string];
+type Ticket = readonly [string, string, string, string, string, string, string, string, string, string, string, string];
 
 type TicketApiItem = {
   id: string;
@@ -16,6 +17,9 @@ type TicketApiItem = {
   priority: string;
   status: string;
   createdAt: string;
+  technician?: { id: string; name: string } | null;
+  visitDate?: string | null;
+  visitTime?: string | null;
 };
 
 type Technician = { id: string; name: string; status: string };
@@ -26,6 +30,13 @@ const statusStyles: Record<string, string> = {
   Resolved: 'border-emerald-200 bg-emerald-50 text-emerald-600',
   Closed: 'border-slate-200 bg-slate-50 text-slate-600',
 };
+
+const ticketStatusOptions = [
+  ['Open', 'Submitted'],
+  ['In Progress', 'Repair Confirmed'],
+  ['Resolved', 'Repair Closed'],
+  ['Closed', 'Repair Rescheduled'],
+] as const;
 
 export function AdminTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -81,6 +92,9 @@ export function AdminTicketsPage() {
               item.createdAt.slice(0, 10),
               item.description,
               [item.subscriber?.street, item.subscriber?.barangay, item.subscriber?.city, item.subscriber?.province].filter(Boolean).join(', ') || item.subscriber?.address || '',
+              item.technician?.id || '',
+              item.visitDate ? item.visitDate.slice(0, 10) : '',
+              item.visitTime || '',
             ]),
           );
         }
@@ -162,9 +176,9 @@ export function AdminTicketsPage() {
     setSelectedTicket(ticket);
     setStatus(ticket[5]);
     setAdminNote('');
-    setVisitDate('');
-    setTimeSlot('');
-    setTechnicianId('');
+    setVisitDate(ticket[10]);
+    setTimeSlot(ticket[11]);
+    setTechnicianId(ticket[9]);
   }
 
   async function saveTicket() {
@@ -173,13 +187,13 @@ export function AdminTicketsPage() {
       await fetch(`/api/tickets/${selectedTicket[0]}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, adminNote }),
+        body: JSON.stringify({ status, adminNote, technicianId, visitDate, visitTime: timeSlot }),
       });
     } finally {
       setTickets((current) =>
         current.map((ticket) =>
           ticket[0] === selectedTicket[0]
-            ? [ticket[0], ticket[1], ticket[2], ticket[3], ticket[4], status, ticket[6], ticket[7], ticket[8]]
+            ? [ticket[0], ticket[1], ticket[2], ticket[3], ticket[4], status, ticket[6], ticket[7], ticket[8], technicianId, visitDate, timeSlot]
             : ticket,
         ),
       );
@@ -247,7 +261,7 @@ export function AdminTicketsPage() {
                   <td className="px-5 py-4 text-slate-500">{ticket[2]}</td>
                   <td className="max-w-64 truncate px-5 py-4 font-semibold text-slate-900" title={ticket[3]}>{ticket[3]}</td>
                   <td className="px-5 py-4">
-                    <span className={`rounded-lg border px-2 py-1 text-xs font-semibold ${statusStyles[ticket[5]]}`}>{ticket[5]}</span>
+                    <span className={`rounded-lg border px-2 py-1 text-xs font-semibold ${statusStyles[ticket[5]]}`}>{formatTicketStatus(ticket[5])}</span>
                   </td>
                   <td className="px-5 py-4 text-slate-500">{ticket[6]}</td>
                   <td className="px-5 py-4"><button onClick={() => openManager(ticket)} className="text-xs font-semibold text-[#2563eb]">Manage</button></td>
@@ -288,7 +302,7 @@ export function AdminTicketsPage() {
               </div>
 
               <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Technician<select value={technicianId} onChange={(event) => setTechnicianId(event.target.value)} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]"><option value="">— Choose available technician —</option>{technicians.map((technician) => <option value={technician.id} key={technician.id}>{formatPersonName(technician.name)}</option>)}</select></label>
-              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-3 w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold normal-case tracking-normal text-amber-700 outline-none focus:border-[#3b4fd8]"><option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option></select></label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-800 outline-none focus:border-slate-400">{ticketStatusOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
             </div>
 
             <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">

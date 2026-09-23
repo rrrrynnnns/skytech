@@ -17,7 +17,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
     ? [['/admin/dashboard', 'Dashboard', LayoutDashboard], ['/admin/subscribers', 'Subscribers', Users], ['/admin/billing', 'Billing', FileText], ['/admin/installations', 'Installations', CalendarDays], ['/admin/technicians', 'Technicians', Wrench], ['/admin/bookings', 'Bookings', CalendarDays], ['/admin/tickets', 'Tickets', Ticket], ['/admin/reports', 'Reports', Activity], ['/admin/settings', 'Settings', Settings]]
     : role === 'technician'
       ? [['/technician/my-tasks', 'Home', LayoutDashboard], ['/technician/tasks', 'My Tasks', Ticket], ['/technician/profile', 'Profile', Users]]
-      : [['/subscriber/my-account', 'Home', LayoutDashboard], ['/subscriber/my-tickets', 'My Requests', Ticket], ['/shared/my-tasks', 'Help', MessageSquare], ['/subscriber/profile', 'Profile', Users]];
+      : [['/subscriber/my-account', 'Home', LayoutDashboard], ['/subscriber/my-tickets', 'My Requests', Ticket], ['/subscriber/help', 'Help', MessageSquare], ['/subscriber/profile', 'Profile', Users]];
 
   async function handleSignOut() {
     await signOut({ callbackUrl: '/login' });

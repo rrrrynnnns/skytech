@@ -116,6 +116,7 @@ model Technician {
   specialization String
   status         TechnicianStatus
   installations  Installation[]
+  tickets        Ticket[]
 }
 
 model Bill {
@@ -163,11 +164,15 @@ model Ticket {
   id           String @id
   subscriberId String
   subscriber   Subscriber @relation(fields: [subscriberId], references: [id])
+  technicianId String?
+  technician   Technician? @relation(fields: [technicianId], references: [id])
   type         TicketType
   subject      String
   description  String
   status       TicketStatus
   priority     TicketPriority
+  visitDate    DateTime?
+  visitTime    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   adminNote    String?
