@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
 import { formatPersonName } from '@/app/lib/name';
-import { formatTicketStatus } from '@/app/lib/ticket-status';
 
-type Ticket = readonly [string, string, string, string, string, string, string, string, string, string, string, string];
+type Ticket = readonly [string, string, string, string, string, string, string, string, string, string | null, string | null, string | null];
 
 type TicketApiItem = {
   id: string;
@@ -17,31 +16,46 @@ type TicketApiItem = {
   priority: string;
   status: string;
   createdAt: string;
-  technician?: { id: string; name: string } | null;
   visitDate?: string | null;
   visitTime?: string | null;
+  technicianId?: string | null;
 };
 
 type Technician = { id: string; name: string; status: string };
 
+function formatVisitDate(value: string | null) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+function formatVisitTime(value: string | null) {
+  return value || '—';
+}
+
 const statusStyles: Record<string, string> = {
   Open: 'border-blue-200 bg-blue-50 text-blue-600',
-  'In Progress': 'border-amber-200 bg-amber-50 text-amber-600',
-  Resolved: 'border-emerald-200 bg-emerald-50 text-emerald-600',
-  Closed: 'border-slate-200 bg-slate-50 text-slate-600',
+  'In Progress': 'border-emerald-200 bg-emerald-50 text-emerald-600',
+  Resolved: 'border-slate-200 bg-slate-50 text-slate-600',
+  Closed: 'border-amber-200 bg-amber-50 text-amber-600',
 };
 
-const ticketStatusOptions = [
-  ['Open', 'Submitted'],
-  ['In Progress', 'Repair Confirmed'],
-  ['Resolved', 'Repair Closed'],
-  ['Closed', 'Repair Rescheduled'],
-] as const;
+const statusLabels: Record<string, string> = {
+  Open: 'Submitted',
+  'In Progress': 'Repair Confirmed',
+  Resolved: 'Repair Closed',
+  Closed: 'Repair Rescheduled',
+};
+
+function getStatusLabel(status: string) {
+  return statusLabels[status] || status;
+}
 
 export function AdminTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [query, setQuery] = useState('');
-  const [type, setType] = useState('All Types');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [status, setStatus] = useState('Open');
   const [adminNote, setAdminNote] = useState('');
@@ -60,10 +74,6 @@ export function AdminTicketsPage() {
     return dates;
   }, []);
 
-  const types = useMemo(
-    () => ['All Types', ...Array.from(new Set(tickets.map((ticket) => ticket[2])))],
-    [tickets],
-  );
   const counts = {
     Open: tickets.filter((ticket) => ticket[5] === 'Open').length,
     'In Progress': tickets.filter((ticket) => ticket[5] === 'In Progress').length,
@@ -72,7 +82,7 @@ export function AdminTicketsPage() {
   };
   const visibleTickets = tickets.filter(
     (ticket) =>
-      (type === 'All Types' || ticket[2] === type) &&
+      (statusFilter === 'All' || ticket[5] === statusFilter) &&
       ticket.join(' ').toLowerCase().includes(query.toLowerCase()),
   );
 
@@ -89,12 +99,12 @@ export function AdminTicketsPage() {
               item.subject,
               item.priority,
               item.status.replace('_', ' '),
-              item.createdAt.slice(0, 10),
+              item.createdAt,
               item.description,
               [item.subscriber?.street, item.subscriber?.barangay, item.subscriber?.city, item.subscriber?.province].filter(Boolean).join(', ') || item.subscriber?.address || '',
-              item.technician?.id || '',
-              item.visitDate ? item.visitDate.slice(0, 10) : '',
-              item.visitTime || '',
+              item.visitDate || null,
+              item.visitTime || null,
+              item.technicianId || null,
             ]),
           );
         }
@@ -130,55 +140,13 @@ export function AdminTicketsPage() {
     counter.textContent = `${visibleTickets.length} records`;
   }, [visibleTickets.length]);
 
-  useEffect(() => {
-    const select = document.querySelector<HTMLSelectElement>('main:has(table[class*="1200px"]) select');
-    if (!select) return;
-    let tabs = select.previousElementSibling as HTMLDivElement | null;
-    if (!tabs?.classList.contains('admin-filter-tabs')) {
-      tabs = document.createElement('div');
-      tabs.className = 'admin-filter-tabs';
-      select.parentElement?.insertBefore(tabs, select);
-      select.hidden = true;
-    }
-    tabs.replaceChildren(
-      ...types.map((option) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = option;
-        const isActive = option === type;
-        button.style.cssText = `
-          border-radius: 9999px;
-          border: 1px solid ${isActive ? '#2447b6' : '#cbd5e1'};
-          padding: 0.5rem 1rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          background-color: ${isActive ? '#2447b6' : '#ffffff'};
-          color: ${isActive ? '#ffffff' : '#64748b'};
-          cursor: pointer;
-          transition: all 150ms ease;
-        `;
-        button.onmouseover = () => {
-          if (!isActive) button.style.backgroundColor = '#f1f5f9';
-        };
-        button.onmouseout = () => {
-          if (!isActive) button.style.backgroundColor = '#ffffff';
-        };
-        button.onclick = () => {
-          select.value = option;
-          select.dispatchEvent(new Event('change', { bubbles: true }));
-        };
-        return button;
-      }),
-    );
-  }, [type, types]);
-
   function openManager(ticket: Ticket) {
     setSelectedTicket(ticket);
     setStatus(ticket[5]);
     setAdminNote('');
-    setVisitDate(ticket[10]);
-    setTimeSlot(ticket[11]);
-    setTechnicianId(ticket[9]);
+    setVisitDate(ticket[9]?.slice(0, 10) || '');
+    setTimeSlot(ticket[10] || '');
+    setTechnicianId(ticket[11] || '');
   }
 
   async function saveTicket() {
@@ -193,7 +161,7 @@ export function AdminTicketsPage() {
       setTickets((current) =>
         current.map((ticket) =>
           ticket[0] === selectedTicket[0]
-            ? [ticket[0], ticket[1], ticket[2], ticket[3], ticket[4], status, ticket[6], ticket[7], ticket[8], technicianId, visitDate, timeSlot]
+            ? [ticket[0], ticket[1], ticket[2], ticket[3], ticket[4], status, ticket[6], ticket[7], ticket[8], visitDate || null, timeSlot || null, technicianId || null]
             : ticket,
         ),
       );
@@ -210,10 +178,10 @@ export function AdminTicketsPage() {
 
       <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ['OPEN', counts.Open],
-          ['IN PROGRESS', counts['In Progress']],
-          ['RESOLVED', counts.Resolved],
-          ['CLOSED', counts.Closed],
+          ['SUBMITTED', counts.Open],
+          ['REPAIR CONFIRMED', counts['In Progress']],
+          ['REPAIR CLOSED', counts.Resolved],
+          ['REPAIR RESCHEDULED', counts.Closed],
         ].map(([label, value]) => (
           <article key={label} className="rounded-xl border border-slate-200 bg-white px-6 py-5">
             <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
@@ -232,15 +200,16 @@ export function AdminTicketsPage() {
             className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#3b4fd8]"
           />
         </div>
-        <select
-          value={type}
-          onChange={(event) => setType(event.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none"
-        >
-          {types.map((option) => (
-            <option key={option}>{option}</option>
-          ))}
+        <label className="status-filter-container relative">
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter support tickets" className="admin-filter-dropdown status-filter-select appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm font-semibold text-slate-600 outline-none focus:border-[#3b4fd8]">
+          <option value="All">All</option>
+          <option value="Open">Submitted</option>
+          <option value="In Progress">Repair Confirmed</option>
+          <option value="Resolved">Repair Closed</option>
+          <option value="Closed">Repair Rescheduled</option>
         </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-3.5 text-slate-400" size={16} />
+        </label>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -248,7 +217,7 @@ export function AdminTicketsPage() {
           <table className="min-w-[1200px] w-full text-left">
             <thead className="border-b border-slate-100 text-xs font-bold uppercase tracking-wide text-slate-400">
               <tr>
-                {['Ticket ID', 'Subscriber', 'Type', 'Subject', 'Status', 'Date', 'Actions'].map((heading) => (
+                {['Ticket ID', 'Subscriber', 'Concern', 'Date', 'Time', 'Status', 'Actions'].map((heading) => (
                   <th className="px-5 py-4" key={heading}>{heading}</th>
                 ))}
               </tr>
@@ -256,14 +225,14 @@ export function AdminTicketsPage() {
             <tbody className="text-sm">
               {visibleTickets.map((ticket) => (
                 <tr className="border-t border-slate-100" key={ticket[0]}>
-                  <td className="px-5 py-4 font-mono text-[#3b6ff5]">{ticket[0]}</td>
+                  <td className="px-5 py-4 text-slate-900">{ticket[0]}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900">{ticket[1]}</td>
                   <td className="px-5 py-4 text-slate-500">{ticket[2]}</td>
-                  <td className="max-w-64 truncate px-5 py-4 font-semibold text-slate-900" title={ticket[3]}>{ticket[3]}</td>
+                  <td className="px-5 py-4 text-slate-500">{formatVisitDate(ticket[9])}</td>
+                  <td className="px-5 py-4 text-slate-500">{formatVisitTime(ticket[10])}</td>
                   <td className="px-5 py-4">
-                    <span className={`rounded-lg border px-2 py-1 text-xs font-semibold ${statusStyles[ticket[5]]}`}>{formatTicketStatus(ticket[5])}</span>
+                    <span className={`rounded-lg border px-2 py-1 text-xs font-semibold ${statusStyles[ticket[5]]}`}>{getStatusLabel(ticket[5])}</span>
                   </td>
-                  <td className="px-5 py-4 text-slate-500">{ticket[6]}</td>
                   <td className="px-5 py-4"><button onClick={() => openManager(ticket)} className="text-xs font-semibold text-[#2563eb]">Manage</button></td>
                 </tr>
               ))}
@@ -284,7 +253,7 @@ export function AdminTicketsPage() {
               <div className="space-y-5">
                 <div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Name</p><p className="mt-2 text-sm text-slate-900">{selectedTicket[1]}</p></div>
                 <div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Address</p><p className="mt-2 text-sm text-slate-900">{selectedTicket[8] || 'No address provided'}</p></div>
-                <div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Ticket ID</p><p className="mt-2 font-mono text-sm text-[#2563eb]">{selectedTicket[0]}</p></div>
+                <div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Ticket ID</p><p className="mt-2 text-sm text-slate-900">{selectedTicket[0]}</p></div>
                 <div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Concern</p><p className="mt-2 text-sm text-slate-900">{selectedTicket[2]}</p></div>
               </div>
 
@@ -302,7 +271,7 @@ export function AdminTicketsPage() {
               </div>
 
               <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Technician<select value={technicianId} onChange={(event) => setTechnicianId(event.target.value)} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]"><option value="">— Choose available technician —</option>{technicians.map((technician) => <option value={technician.id} key={technician.id}>{formatPersonName(technician.name)}</option>)}</select></label>
-              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-800 outline-none focus:border-slate-400">{ticketStatusOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Status<select value={status} onChange={(event) => setStatus(event.target.value)} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none focus:border-[#3b4fd8]"><option value="Open">Submitted</option><option value="In Progress">Repair Confirmed</option><option value="Resolved">Repair Closed</option><option value="Closed">Repair Rescheduled</option></select></label>
             </div>
 
             <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">

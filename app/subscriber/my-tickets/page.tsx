@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, ChevronRight, FileText, Plus, Router, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, FileText, Plus, Router, Wrench, X } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { PortalShell } from '@/app/components/PortalShell';
 import { Badge } from '@/app/components/Badge';
@@ -10,12 +10,16 @@ import { formatTicketStatus } from '@/app/lib/ticket-status';
 
 type Ticket = {
   id: string;
+  subscriber?: { name?: string | null; address?: string | null } | null;
   type: string;
   subject: string;
   description: string;
   status: string;
   createdAt: string;
   technicianName?: string | null;
+  subscriberName?: string | null;
+  subscriberAddress?: string | null;
+  displayStatus?: string;
   visitDate?: string | null;
   visitTime?: string | null;
   details?: string | null;
@@ -38,7 +42,7 @@ function formatVisitDateTime(ticket: Ticket) {
       })
     : '';
 
-  return [date, ticket.visitTime].filter(Boolean).join(', ') || 'Not scheduled yet';
+  return date || 'Not scheduled yet';
 }
 
 function formatSelectedVisitDateTime(ticket: Ticket) {
@@ -65,16 +69,36 @@ export default function MyTicketsPage() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
-    fetch('/api/tickets')
-      .then(async (response) => {
-        if (!response.ok) return;
-        const result = await response.json();
-        if (Array.isArray(result.data)) {
-          setTickets(result.data.map((ticket: Ticket & { technician?: { name?: string | null } | null }) => ({
-            ...ticket,
-            technicianName: ticket.technician?.name || null,
-          })));
-        }
+    Promise.all([fetch('/api/tickets'), fetch('/api/installations')])
+      .then(async ([ticketResponse, installationResponse]) => {
+        const ticketsResult = ticketResponse.ok ? await ticketResponse.json() : { data: [] };
+        const installationsResult = installationResponse.ok ? await installationResponse.json() : { data: [] };
+        const tickets = Array.isArray(ticketsResult.data)
+          ? ticketsResult.data.map((ticket: Ticket & { technician?: { name?: string | null } | null }) => ({
+              ...ticket,
+              technicianName: ticket.technician?.name || null,
+              subscriberName: ticket.subscriber?.name || null,
+              subscriberAddress: ticket.subscriber?.address || null,
+            }))
+          : [];
+        const installations = Array.isArray(installationsResult.data)
+          ? installationsResult.data.map((installation: { id: string; date: string; time: string; type: string; status: string; address: string; notes?: string | null; technician?: { name?: string | null } | null; subscriber?: { name?: string | null; address?: string | null } | null }) => ({
+              id: installation.id,
+              type: 'Installation',
+              subject: installation.type,
+              description: installation.type,
+              status: installation.status === 'Scheduled' ? 'Installation_Confirmed' : installation.status,
+              displayStatus: installation.status === 'Scheduled' ? 'Installation Confirmed' : installation.status.replace(/_/g, ' '),
+              createdAt: installation.date,
+              technicianName: installation.technician?.name || null,
+              subscriberName: installation.subscriber?.name || null,
+              subscriberAddress: installation.subscriber?.address || installation.address || null,
+              visitDate: installation.date,
+              visitTime: installation.time,
+              details: installation.notes || null,
+            }))
+          : [];
+        setTickets([...tickets, ...installations]);
       })
       .catch(() => undefined);
   }, []);
@@ -109,7 +133,7 @@ export default function MyTicketsPage() {
   }
 
   const visibleTickets = tickets.filter((ticket) =>
-    tab === 'active' ? !['Resolved', 'Closed'].includes(ticket.status) : ['Resolved', 'Closed'].includes(ticket.status),
+    tab === 'active' ? !['Resolved', 'Closed', 'Installation_Closed'].includes(ticket.status) : ['Resolved', 'Closed', 'Installation_Closed'].includes(ticket.status),
   );
 
   const selectedVisitDateTime = selectedTicket ? formatSelectedVisitDateTime(selectedTicket) : '';
@@ -143,7 +167,7 @@ export default function MyTicketsPage() {
             >
               In Progress
               <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-[#2166f3]">
-                {tickets.filter((ticket) => !['Resolved', 'Closed'].includes(ticket.status)).length}
+                {tickets.filter((ticket) => !['Resolved', 'Closed', 'Installation_Closed'].includes(ticket.status)).length}
               </span>
             </button>
 
@@ -168,12 +192,16 @@ export default function MyTicketsPage() {
                   className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-colors duration-100 hover:bg-[#f8fafc]"
                   key={ticket.id}
                 >
-                  <div className="min-w-0">
-                    <Badge value={formatTicketStatus(ticket.status)} />
-                    <h2 className="mt-2 text-xl font-bold text-slate-800">{ticket.id}</h2>
-                    <p className="mt-1 text-sm text-slate-600">{formatVisitDateTime(ticket)}</p>
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#2166f3]">
+                      {ticket.type === 'Installation' ? <CalendarDays size={20} /> : <Wrench size={20} />}
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl font-bold text-slate-800">{ticket.id}</h2>
+                      <p className="mt-1 text-sm text-slate-600">{formatVisitDateTime(ticket)}</p>
+                    </div>
                   </div>
-                  <ChevronRight className="shrink-0 text-slate-400" size={20} />
+                  <Badge value={formatTicketStatus(ticket.status)} />
                 </button>
               ))}
             </div>
@@ -195,11 +223,11 @@ export default function MyTicketsPage() {
                 <div className="flex items-center justify-between bg-[#2447b6] px-5 py-6 text-white sm:px-8 lg:px-10">
                   <div className="flex items-center gap-3">
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15">
-                      <FileText size={18} />
+                      {selectedTicket.type === 'Installation' ? <CalendarDays size={18} /> : <Wrench size={18} />}
                     </span>
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-blue-100">Status</p>
-                      <p className="text-xl font-bold">{formatTicketStatus(selectedTicket.status)}</p>
+                      <p className="text-xl font-bold">{selectedTicket.displayStatus || formatTicketStatus(selectedTicket.status)}</p>
                     </div>
                   </div>
 
@@ -243,23 +271,33 @@ export default function MyTicketsPage() {
                     <h3 className="text-2xl font-bold text-slate-800">Request details</h3>
                     <div className="mt-5 space-y-4">
                       <div>
-                        <p className="text-sm text-slate-500">Concern</p>
-                        <p className="mt-1 text-lg font-semibold text-slate-800">{selectedTicket.subject}</p>
+                        <p className="text-sm text-slate-500">Name</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-800">{selectedTicket.subscriberName || 'Not available'}</p>
                       </div>
 
                       <div>
+                        <p className="text-sm text-slate-500">Address</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-800">{selectedTicket.subscriberAddress || 'No address provided'}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-slate-500">{selectedTicket.type === 'Installation' ? 'Service Type' : 'Concern'}</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-800">{selectedTicket.type === 'Installation' ? 'Installation' : selectedTicket.subject}</p>
+                      </div>
+
+                      {selectedTicket.type !== 'Installation' && <div>
                         <p className="text-sm text-slate-500">Description</p>
                         <p className="mt-1 text-lg font-semibold text-slate-800">{selectedTicket.type.replace(/_/g, ' ')}</p>
-                      </div>
+                      </div>}
 
-                      <div>
+                      {selectedTicket.type !== 'Installation' && <div>
                         <p className="text-sm text-slate-500">Details</p>
                         {selectedTicket.details || selectedTicket.description ? (
                           <p className="mt-1 whitespace-pre-line text-base leading-7 text-slate-700">{selectedTicket.details || selectedTicket.description}</p>
                         ) : (
                           <p className="mt-1 text-lg font-semibold text-slate-800">No additional details provided.</p>
                         )}
-                      </div>
+                      </div>}
                     </div>
                   </div>
                 </div>

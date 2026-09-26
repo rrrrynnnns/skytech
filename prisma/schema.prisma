@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -13,6 +13,7 @@ enum Role {
   technician
   subscriber
 }
+
 enum Plan {
   Fiber_25Mbps
   Fiber_50Mbps
@@ -20,55 +21,68 @@ enum Plan {
   Fiber_200Mbps
   Fiber_300Mbps
 }
+
 enum SubscriberStatus {
   Active
   Suspended
   Disconnected
 }
+
 enum TechnicianStatus {
   Active
   Off_Duty
   On_Leave
 }
+
 enum BillStatus {
   Paid
   Unpaid
   Overdue
 }
+
 enum InstallationType {
   Installation
   Repair
   Maintenance
 }
+
 enum InstallationStatus {
   Scheduled
   In_Progress
   Completed
   Cancelled
+  Installation_Confirmed
+  Installation_Closed
+  Installation_Rescheduled
 }
+
 enum BookingStatus {
   Pending
   Reviewed
   Approved
   Rejected
 }
+
 enum TicketType {
   Billing_Inquiry
   No_Internet_Connection
   Slow_Internet_Connection
 }
+
 enum TicketStatus {
   Open
   In_Progress
   Resolved
   Closed
 }
+
 enum TicketPriority {
   Low
   Medium
   High
   Urgent
 }
+
 enum NotifType {
   booking
   billing
@@ -80,9 +94,9 @@ enum NotifType {
 }
 
 model User {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   name         String
-  email        String @unique
+  email        String  @unique
   password     String
   role         Role
   subscriberId String?
@@ -90,7 +104,8 @@ model User {
 }
 
 model Subscriber {
-  id             String @id
+  id             String           @id
+  archived       Boolean          @default(false)
   name           String
   email          String
   contact        String
@@ -109,7 +124,8 @@ model Subscriber {
 }
 
 model Technician {
-  id             String @id
+  id             String           @id
+  archived       Boolean          @default(false)
   name           String
   email          String
   contact        String?
@@ -120,7 +136,7 @@ model Technician {
 }
 
 model Bill {
-  id              String @id
+  id              String     @id
   subscriberId    String
   subscriber      Subscriber @relation(fields: [subscriberId], references: [id])
   plan            Plan
@@ -133,10 +149,10 @@ model Bill {
 }
 
 model Installation {
-  id           String @id
+  id           String             @id
   subscriberId String
   technicianId String
-  technician   Technician @relation(fields: [technicianId], references: [id])
+  technician   Technician         @relation(fields: [technicianId], references: [id])
   address      String
   date         DateTime
   time         String
@@ -146,26 +162,26 @@ model Installation {
 }
 
 model Booking {
-  id            String @id
+  id            String        @id
   name          String
   contact       String
   email         String
   address       String
   plan          Plan
   preferredDate DateTime
-  submittedAt   DateTime @default(now())
+  submittedAt   DateTime      @default(now())
   status        BookingStatus
   notes         String?
   subscriberId  String?
-  subscriber    Subscriber? @relation(fields: [subscriberId], references: [id])
+  subscriber    Subscriber?   @relation(fields: [subscriberId], references: [id])
 }
 
 model Ticket {
-  id           String @id
+  id           String         @id
   subscriberId String
-  subscriber   Subscriber @relation(fields: [subscriberId], references: [id])
+  subscriber   Subscriber     @relation(fields: [subscriberId], references: [id])
   technicianId String?
-  technician   Technician? @relation(fields: [technicianId], references: [id])
+  technician   Technician?    @relation(fields: [technicianId], references: [id])
   type         TicketType
   subject      String
   description  String
@@ -173,31 +189,31 @@ model Ticket {
   priority     TicketPriority
   visitDate    DateTime?
   visitTime    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   adminNote    String?
 }
 
 model Notification {
-  id        String @id @default(cuid())
+  id        String    @id @default(cuid())
   forRole   Role
   forUserId String?
   type      NotifType
   title     String
   body      String
-  timestamp DateTime @default(now())
-  read      Boolean @default(false)
+  timestamp DateTime  @default(now())
+  read      Boolean   @default(false)
 }
 
 model Message {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   fromId    String
   fromName  String
   fromRole  String
   toId      String
   content   String
   timestamp DateTime @default(now())
-  isBot     Boolean @default(false)
+  isBot     Boolean  @default(false)
 }
 
 model SystemSettings {

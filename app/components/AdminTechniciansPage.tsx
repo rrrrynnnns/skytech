@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Search, X } from 'lucide-react';
+import { ChevronDown, Plus, Search, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
 import { formatPersonName } from '@/app/lib/name';
 
@@ -11,9 +11,10 @@ type Technician = {
   email: string;
   status: 'Active' | 'Off Duty' | 'On Leave';
   contact?: string;
+  archived?: boolean;
 };
 
-type StatusFilter = 'All' | Technician['status'];
+type StatusFilter = 'All' | 'Active' | 'On Leave' | 'Archived';
 
 const normalizeStatus = (status: string): Technician['status'] => {
   const normalized = status.replace(/_/g, ' ');
@@ -39,6 +40,7 @@ export function AdminTechniciansPage() {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<StatusFilter>('All');
+  const [showArchived, setShowArchived] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -50,12 +52,13 @@ export function AdminTechniciansPage() {
         if (!response.ok) throw new Error(result.error || 'Unable to load technicians.');
         if (Array.isArray(result.data)) {
           setTechnicians(
-            result.data.map((item: { id: string; name: string; email: string; status: string; contact?: string | null }) => ({
+            result.data.map((item: { id: string; name: string; email: string; status: string; contact?: string | null; archived?: boolean }) => ({
               id: item.id,
               name: item.name,
               email: item.email,
               status: normalizeStatus(item.status),
               contact: item.contact || '',
+              archived: Boolean(item.archived),
             })),
           );
         }
@@ -80,10 +83,11 @@ export function AdminTechniciansPage() {
     const firstName = String(form.get('firstName') || '').trim();
     const middleName = String(form.get('middleName') || '').trim();
     const lastName = String(form.get('lastName') || '').trim();
+    const contact = String(form.get('contact') || '').trim();
     const payload = {
       name: [firstName, middleName, lastName].filter(Boolean).join(' '),
       email: String(form.get('email') || '').trim(),
-      contact: String(form.get('contact') || '').trim(),
+      contact,
       status: String(form.get('status') || 'Active').replace(/\s+/g, '_'),
     };
 
@@ -93,7 +97,7 @@ export function AdminTechniciansPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const result = await response.json().catch(() => ({ data: null, error: 'The server returned an empty response.' }));
+      const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Unable to save technician.');
       const saved = result.data;
       const technician: Technician = {
@@ -101,7 +105,7 @@ export function AdminTechniciansPage() {
         name: saved.name,
         email: saved.email,
         status: normalizeStatus(saved.status),
-        contact: payload.contact,
+        contact,
       };
       setTechnicians((current) => editingTechnician
         ? current.map((item) => item.id === technician.id ? technician : item)
@@ -122,6 +126,18 @@ export function AdminTechniciansPage() {
     else window.alert('Unable to delete technician.');
   }
 
+  async function archiveTechnician(technician: Technician) {
+    const response = await fetch(`/api/technicians/${technician.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }) });
+    if (response.ok) setTechnicians((current) => current.map((item) => item.id === technician.id ? { ...item, archived: true } : item));
+    else window.alert('Unable to archive technician.');
+  }
+
+  async function unarchiveTechnician(technician: Technician) {
+    const response = await fetch(`/api/technicians/${technician.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: false }) });
+    if (response.ok) setTechnicians((current) => current.map((item) => item.id === technician.id ? { ...item, archived: false } : item));
+    else window.alert('Unable to unarchive technician.');
+  }
+
   const summaryCounts = useMemo(
     () => ({
       total: technicians.length,
@@ -133,7 +149,9 @@ export function AdminTechniciansPage() {
   );
 
   const visibleTechnicians = technicians.filter((technician) => {
-    const matchesFilter = filter === 'All' || technician.status === filter;
+    const matchesFilter = showArchived
+      ? technician.archived
+      : !technician.archived && (filter === 'All' || technician.status === filter);
     const haystack = `${technician.id} ${technician.name} ${technician.email} ${technician.status}`.toLowerCase();
     return matchesFilter && haystack.includes(query.toLowerCase());
   });
@@ -177,16 +195,20 @@ export function AdminTechniciansPage() {
           />
         </div>
 
+        <label className="status-filter-container relative">
         <select
           value={filter}
           onChange={(event) => setFilter(event.target.value as StatusFilter)}
-          className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none"
+          className="admin-filter-dropdown status-filter-select appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm font-semibold text-slate-600 outline-none focus:border-[#3b4fd8]"
         >
           <option value="All">All</option>
           <option value="Active">Active</option>
-          <option value="Off Duty">Off Duty</option>
           <option value="On Leave">On Leave</option>
         </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-3.5 text-slate-400" size={16} />
+        </label>
+        <button type="button" onClick={() => setShowArchived((current) => !current)} className="rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600">{showArchived ? "Active" : "Archived"}</button>
+        <span className="ml-auto text-sm text-slate-400">{visibleTechnicians.length} records</span>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -204,7 +226,7 @@ export function AdminTechniciansPage() {
             <tbody className="text-sm">
               {visibleTechnicians.map((technician) => (
                 <tr key={technician.id} className="border-t border-slate-100">
-                  <td className="px-5 py-4 font-mono text-[#3b6ff5]">{technician.id}</td>
+                  <td className="px-5 py-4 text-slate-900">{technician.id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-900">{formatPersonName(technician.name)}</td>
                   <td className="px-5 py-4 text-slate-700">{technician.email}</td>
                   <td className="px-5 py-4 text-slate-700">{technician.contact || '—'}</td>
@@ -217,8 +239,12 @@ export function AdminTechniciansPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex gap-3 text-xs font-semibold">
-                      <button onClick={() => openEditModal(technician)} className="text-[#2563eb]">Edit</button>
-                      <button onClick={() => void deleteTechnician(technician)} className="text-red-500">Delete</button>
+                      {!technician.archived && <button onClick={() => openEditModal(technician)} className="text-[#2563eb]">Edit</button>}
+                      {!technician.archived && <button onClick={() => void archiveTechnician(technician)} className="text-slate-500">Archive</button>}
+                      {technician.archived && <>
+                        <button onClick={() => void unarchiveTechnician(technician)} className="text-[#2563eb]">Unarchive</button>
+                        <button onClick={() => void deleteTechnician(technician)} className="text-red-500">Delete</button>
+                      </>}
                     </div>
                   </td>
                 </tr>
